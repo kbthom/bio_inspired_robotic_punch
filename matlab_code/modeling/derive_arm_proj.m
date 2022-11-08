@@ -132,13 +132,13 @@ matlabFunction(b,'file',[directory 'b_' name],'vars',{z u p});
 % % Write a function to evaluate the energy of the system given the current state and parameters
 matlabFunction(E,'file',[directory 'energy_' name],'vars',{z p});
 
-matlabFunction(rE,'file',[directory 'position_foot'],'vars',{z p});
-matlabFunction(drE,'file',[directory 'velocity_foot'],'vars',{z p});
-matlabFunction(J ,'file',[directory 'jacobian_foot'],'vars',{z p});
-matlabFunction(dJ ,'file',[directory 'jacobian_dot_foot'],'vars',{z p});
+matlabFunction(rE,'file',[directory 'position_arm'],'vars',{z p});
+matlabFunction(drE,'file',[directory 'velocity_arm'],'vars',{z p});
+matlabFunction(J ,'file',[directory 'jacobian_arm'],'vars',{z p});
+matlabFunction(dJ ,'file',[directory 'jacobian_dot_arm'],'vars',{z p});
 
-matlabFunction(Grav_Joint_Sp ,'file', [directory 'Grav_leg'] ,'vars',{z p});
-matlabFunction(Corr_Joint_Sp ,'file', [directory 'Corr_leg']     ,'vars',{z p});
+matlabFunction(Grav_Joint_Sp ,'file', [directory 'Grav_arm'] ,'vars',{z p});
+matlabFunction(Corr_Joint_Sp ,'file', [directory 'Corr_arm']     ,'vars',{z p});
 matlabFunction(keypoints,'file',[directory 'keypoints_' name],'vars',{z p});
 
 

@@ -1,4 +1,4 @@
-function simulate_leg()
+function simulate_arm()
     %% Define fixed paramters
     m1 =.0393 + .2;         m2 =.0368; 
     m3 = .00783;            m4 = .0155;
@@ -65,7 +65,7 @@ function simulate_leg()
 
     
     %% Compute Energy
-    E = energy_leg(z_out,p);
+    E = energy_arm(z_out,p);
     figure(1); clf
     plot(tspan,E);xlabel('Time (s)'); ylabel('Energy (J)');
     
@@ -73,8 +73,8 @@ function simulate_leg()
     rE = zeros(2,length(tspan));
     vE = zeros(2,length(tspan));
     for i = 1:length(tspan)
-        rE(:,i) = position_foot(z_out(:,i),p);
-        vE(:,i) = velocity_foot(z_out(:,i),p);
+        rE(:,i) = position_arm(z_out(:,i),p);
+        vE(:,i) = velocity_arm(z_out(:,i),p);
     end
     
     figure(2); clf;
@@ -128,9 +128,9 @@ function simulate_leg()
     momentum = zeros(1,length(tspan));
     for i = 1:length(tspan)
         z = z_out(:,i);
-        A = A_leg(z,p);
-        J  = jacobian_foot(z,p); 
-        M_op = inv(J*inv(A)*J');
+        A = A_arm(z,p);
+        J  = jacobian_arm(z,p); 
+        M_op =inv( (J/A)*J' );
         jointvels = [z(3) ; z(4)];
         cartvels = J*jointvels;
         velmag = sqrt(cartvels(1)^2 + cartvels(2)^2);
@@ -152,13 +152,13 @@ function tau = control_law(t, z, p, p_traj,targets)
     D_x = 10;  % Damping X
     D_y = 10;  % Damping Y
 
-    A = A_leg(z,p);
-    J  = jacobian_foot(z,p); 
-    G = Grav_leg(z,p);
-    V = Corr_leg(z,p);
-    Jdot = jacobian_dot_foot(z,p);
+    A = A_arm(z,p);
+    J  = jacobian_arm(z,p); 
+    G = Grav_arm(z,p);
+    V = Corr_arm(z,p);
+    Jdot = jacobian_dot_arm(z,p);
 
-    M_op = inv(J*inv(A)*J');
+    M_op = inv(J/A*J');
     mu = M_op * J * inv(A)* V - M_op * Jdot* [z(3) ; z(4)];
     rho = M_op * J * inv(A) * G;
 
@@ -175,8 +175,8 @@ function tau = control_law(t, z, p, p_traj,targets)
      aEd = [0 0];
 
     % Actual position and velocity 
-    rE = position_foot(z,p);
-    vE = velocity_foot(z,p);
+    rE = position_arm(z,p);
+    vE = velocity_arm(z,p);
     
     % Compute virtual foce for Question 1.4 and 1.5
      err_pos = rEd(1:2)- rE;
@@ -194,13 +194,13 @@ end
 
 function dz = dynamics(t,z,p,p_traj,targets)
     % Get mass matrix
-    A = A_leg(z,p);
+    A = A_arm(z,p);
     
     % Compute Controls
     tau = control_law(t,z,p,p_traj,targets);
     
     % Get b = Q - V(q,qd) - G(q)
-    b = b_leg(z,tau,p);
+    b = b_arm(z,tau,p);
     
     % Solve for qdd.
     qdd = A\(b);
