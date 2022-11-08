@@ -1,5 +1,5 @@
 clear
-name = 'leg';
+name = 'arm';
 
 % Define variables for time, generalized coordinates + derivatives, controls, and parameters 
 syms t th1 th2 dth1 dth2 ddth1 ddth2 real
@@ -121,15 +121,25 @@ drE= drE(1:2);
 J  = J(1:2,1:2);
 dJ = dJ(1:2,1:2);
 
-matlabFunction(A,'file',['A_' name],'vars',{z p});
-matlabFunction(b,'file',['b_' name],'vars',{z u p});
-matlabFunction(E,'file',['energy_' name],'vars',{z p});
-matlabFunction(rE,'file',['position_foot'],'vars',{z p});
-matlabFunction(drE,'file',['velocity_foot'],'vars',{z p});
-matlabFunction(J ,'file',['jacobian_foot'],'vars',{z p});
-matlabFunction(dJ ,'file',['jacobian_dot_foot'],'vars',{z p});
+% Write functions to a separate folder because we don't usually have to see them
+addpath('auto_derived\')
+directory = 'auto_derived/';
 
-matlabFunction(Grav_Joint_Sp ,'file', ['Grav_leg'] ,'vars',{z p});
-matlabFunction(Corr_Joint_Sp ,'file', ['Corr_leg']     ,'vars',{z p});
-matlabFunction(keypoints,'file',['keypoints_' name],'vars',{z p});
+% % Write a function to evaluate the A matrix of the system given the current state and parameters
+matlabFunction(A,'file',[directory 'A_' name],'vars',{z p});
+% % Write a function to evaluate the b vector of the system given the current state, current control, and parameters
+matlabFunction(b,'file',[directory 'b_' name],'vars',{z u p});
+% % Write a function to evaluate the energy of the system given the current state and parameters
+matlabFunction(E,'file',[directory 'energy_' name],'vars',{z p});
+
+matlabFunction(rE,'file',[directory 'position_foot'],'vars',{z p});
+matlabFunction(drE,'file',[directory 'velocity_foot'],'vars',{z p});
+matlabFunction(J ,'file',[directory 'jacobian_foot'],'vars',{z p});
+matlabFunction(dJ ,'file',[directory 'jacobian_dot_foot'],'vars',{z p});
+
+matlabFunction(Grav_Joint_Sp ,'file', [directory 'Grav_leg'] ,'vars',{z p});
+matlabFunction(Corr_Joint_Sp ,'file', [directory 'Corr_leg']     ,'vars',{z p});
+matlabFunction(keypoints,'file',[directory 'keypoints_' name],'vars',{z p});
+
+
 
