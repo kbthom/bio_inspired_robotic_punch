@@ -1,4 +1,7 @@
 function simulate_arm()
+    addpath('auto_derived\')
+    addpath('animate\')
+    addpath('modeling\')
     %% Define fixed paramters
     m1 =.0393 + .2;         m2 =.0368; 
     m3 = .00783;            m4 = .0155;
@@ -122,6 +125,8 @@ function simulate_arm()
 %     % Ground Q2.3
 %     plot([-.2 .2],[ground_height ground_height],'k'); 
     
+    
+    
     animateSol(tspan, z_out,p);
 
     
@@ -218,7 +223,7 @@ function animateSol(tspan, x,p)
     h_AC = plot([0],[0],'LineWidth',2);
     h_BD = plot([0],[0],'LineWidth',2);
     h_CE = plot([0],[0],'LineWidth',2);
-   
+    h_ellipse = plot(zeros(100),zeros(100),'LineWidth',2);
     
     xlabel('x'); ylabel('y');
     h_title = title('t=0.0s');
@@ -235,13 +240,15 @@ function animateSol(tspan, x,p)
         t = tspan(i);
         z = x(:,i); 
         keypoints = keypoints_leg(z,p);
+        
+        ellipse_pts=inertial_ellipse(z,p);
 
         rA = keypoints(:,1); % Vector to base of cart
         rB = keypoints(:,2);
         rC = keypoints(:,3); % Vector to tip of pendulum
         rD = keypoints(:,4);
         rE = keypoints(:,5);
-
+        
         set(h_title,'String',  sprintf('t=%.2f',t) ); % update title
         
         set(h_OB,'XData',[0 rB(1)]);
@@ -255,6 +262,9 @@ function animateSol(tspan, x,p)
         
         set(h_CE,'XData',[rC(1) rE(1)]);
         set(h_CE,'YData',[rC(2) rE(2)]);
+
+        set(h_ellipse,'XData',ellipse_pts(1,:)+rE(1))
+        set(h_ellipse,'YData',ellipse_pts(2,:)+rE(2))
 
         pause(.01)
     end
