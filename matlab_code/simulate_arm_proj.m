@@ -1,4 +1,7 @@
-function simulate_leg()
+function simulate_arm()
+    addpath('auto_derived\')
+    addpath('animate\')
+    addpath('modeling\')
     %% Define fixed paramters
     m1 =.0393 + .2;         m2 =.0368; 
     m3 = .00783;            m4 = .0155;
@@ -51,7 +54,7 @@ function simulate_leg()
     end
 
     %% Compute Energy
-    E = energy_leg(z_out,p);
+    E = energy_arm(z_out,p);
     figure(1); clf
     plot(tspan,E);xlabel('Time (s)'); ylabel('Energy (J)');
     
@@ -59,8 +62,8 @@ function simulate_leg()
     rE = zeros(2,length(tspan));
     vE = zeros(2,length(tspan));
     for i = 1:length(tspan)
-        rE(:,i) = position_foot(z_out(:,i),p);
-        vE(:,i) = velocity_foot(z_out(:,i),p);
+        rE(:,i) = position_arm(z_out(:,i),p);
+        vE(:,i) = velocity_arm(z_out(:,i),p);
     end
     
     figure(2); clf;
@@ -103,9 +106,9 @@ function simulate_leg()
     momentum = zeros(1,length(tspan));
     for i = 1:length(tspan)
         z = z_out(:,i);
-        A = A_leg(z,p);
-        J  = jacobian_foot(z,p); 
-        M_op = inv(J*inv(A)*J');
+        A = A_arm(z,p);
+        J  = jacobian_arm(z,p); 
+        M_op =inv( (J/A)*J' );
         jointvels = [z(3) ; z(4)];
         cartvels = J*jointvels;
         velmag = sqrt(cartvels(1)^2 + cartvels(2)^2);
@@ -120,20 +123,20 @@ function simulate_leg()
 
 end
 
-function tau = control_law(t, z, p,targets)
+function tau = control_law(t, z, p, p_traj,targets,tau_constraint)
     % Controller gains
     K_x = 100; % Spring stiffness X
     K_y = 100; % Spring stiffness Y
     D_x = 10;  % Damping X
     D_y = 10;  % Damping Y
 
-    A = A_leg(z,p);
-    J  = jacobian_foot(z,p); 
-    G = Grav_leg(z,p);
-    V = Corr_leg(z,p);
-    Jdot = jacobian_dot_foot(z,p);
+    A = A_arm(z,p);
+    J  = jacobian_arm(z,p); 
+    G = Grav_arm(z,p);
+    V = Corr_arm(z,p);
+    Jdot = jacobian_dot_arm(z,p);
 
-    M_op = inv(J*inv(A)*J');
+    M_op = inv(J/A*J');
     mu = M_op * J * inv(A)* V - M_op * Jdot* [z(3) ; z(4)];
     rho = M_op * J * inv(A) * G;
 
@@ -150,8 +153,8 @@ function tau = control_law(t, z, p,targets)
      aEd = [0 0];
 
     % Actual position and velocity 
-    rE = position_foot(z,p);
-    vE = velocity_foot(z,p);
+    rE = position_arm(z,p);
+    vE = velocity_arm(z,p);
     
     % Compute virtual foce for Question 1.4 and 1.5
     err_pos = rEd(1:2)- rE;
@@ -162,18 +165,20 @@ function tau = control_law(t, z, p,targets)
  
     f = M_op*(K*err_pos+D*err_vel) + rho ;
     tau = J' * f;
+    tau = min(tau,tau_constraint);
 end
 
 
 function dz = dynamics(t,z,p,targets)
     % Get mass matrix
-    A = A_leg(z,p);
+    A = A_arm(z,p);
     
     % Compute Controls
-    tau = control_law(t,z,p,targets);
+    tau_constraint = [0.83385;0.83385];
+    tau = control_law(t,z,p,p_traj,targets,tau_constraint);
     
     % Get b = Q - V(q,qd) - G(q)
-    b = b_leg(z,tau,p);
+    b = b_arm(z,tau,p);
     
     % Solve for qdd.
     qdd = A\(b);
@@ -191,13 +196,13 @@ function animateSol(tspan, x,p)
     h_AC = plot([0],[0],'LineWidth',2);
     h_BD = plot([0],[0],'LineWidth',2);
     h_CE = plot([0],[0],'LineWidth',2);
-   
+    h_ellipse = plot(zeros(100),zeros(100),'LineWidth',2);
     
     xlabel('x'); ylabel('y');
     h_title = title('t=0.0s');
     
     axis equal
-    axis([-.1 .3 -.2 .2]);
+    axis([-.2 .2 -.3 .1]);
 
     %Step through and update animation
     for i = 1:length(tspan)
@@ -207,14 +212,16 @@ function animateSol(tspan, x,p)
         end
         t = tspan(i);
         z = x(:,i); 
-        keypoints = keypoints_leg(z,p);
+        keypoints = keypoints_arm(z,p);
+        
+        ellipse_pts=inertial_ellipse(z,p);
 
         rA = keypoints(:,1); 
         rB = keypoints(:,2);
         rC = keypoints(:,3);
         rD = keypoints(:,4);
         rE = keypoints(:,5);
-
+        
         set(h_title,'String',  sprintf('t=%.2f',t) ); % update title
         
         set(h_OB,'XData',[0 rB(1)]);
@@ -228,6 +235,9 @@ function animateSol(tspan, x,p)
         
         set(h_CE,'XData',[rC(1) rE(1)]);
         set(h_CE,'YData',[rC(2) rE(2)]);
+
+        set(h_ellipse,'XData',ellipse_pts(1,:)+rE(1))
+        set(h_ellipse,'YData',ellipse_pts(2,:)+rE(2))
 
         pause(.01)
     end
