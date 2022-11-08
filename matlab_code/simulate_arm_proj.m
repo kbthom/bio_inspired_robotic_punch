@@ -123,7 +123,7 @@ function simulate_arm()
 
 end
 
-function tau = control_law(t, z, p, p_traj,targets,tau_constraint)
+function tau = control_law(t, z, p,targets,tau_constraint)
     % Controller gains
     K_x = 100; % Spring stiffness X
     K_y = 100; % Spring stiffness Y
@@ -175,7 +175,7 @@ function dz = dynamics(t,z,p,targets)
     
     % Compute Controls
     tau_constraint = [0.83385;0.83385];
-    tau = control_law(t,z,p,p_traj,targets,tau_constraint);
+    tau = control_law(t,z,p,targets,tau_constraint);
     
     % Get b = Q - V(q,qd) - G(q)
     b = b_arm(z,tau,p);
@@ -202,7 +202,7 @@ function animateSol(tspan, x,p)
     h_title = title('t=0.0s');
     
     axis equal
-    axis([-.2 .2 -.3 .1]);
+    axis([-.1 .4 -.3 .1]);
 
     %Step through and update animation
     for i = 1:length(tspan)
