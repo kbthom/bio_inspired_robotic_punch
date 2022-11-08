@@ -12,30 +12,22 @@ function simulate_leg()
     Ir = 0.0035/N^2;
     g = 9.81;    
    
-    
-%     restitution_coeff = 0.;
-%     friction_coeff = 10;
-%     ground_height = -0.13;
     %% Parameter vector
     p   = [m1 m2 m3 m4 I1 I2 I3 I4 Ir N l_O_m1 l_B_m2 l_A_m3 l_C_m4 l_OA l_OB l_AC l_DE g]';
-       
-    %% Simulation Parameters Set 2 -- Operational Space Control
-    p_traj.omega = 3;
-    p_traj.x_0   = 0;
-    p_traj.y_0   = -.125;
-    p_traj.r     = 0.025;
     
     %% Perform Dynamic simulation
     dt = 0.001;
     tf = 5;
     num_step = floor(tf/dt);
     tspan = linspace(0, tf, num_step); 
-    z0 = [-pi/4; pi/2; 0; 0];
+    z0 = [pi/2; -pi/2; 0; 0];
     z_out = zeros(4,num_step);
     z_out(:,1) = z0;
 
-    rEd = [0 , 0; -.1 , -(.042 + .096 + .091)];
+    rEd = [0.1 , 0.22; 
+          0    , 0];
     targets = zeros(2,length(tspan));
+    
     for i = 1:length(tspan);
         if tspan(i) < 2  
             targets(1,i) = rEd(1,1);
@@ -47,23 +39,17 @@ function simulate_leg()
     end
     
     for i=1:num_step-1
-        dz = dynamics(tspan(i), z_out(:,i), p, p_traj,rEd);
+        dz = dynamics(tspan(i), z_out(:,i), p , rEd);
 
         % Velocity update with dynamics
         new = dz*dt;
         z_out(3:4,i+1) = z_out(3:4,i) + new(3:4);
         z_out(1:2,i+1) = z_out(1:2,i);
 
-%         % Velocity update with impact
-%         qdot = discrete_impact_contact(z_out(:,i+1), p, restitution_coeff, friction_coeff, ground_height);
-%         z_out(3:4,i+1) = qdot;
-
         % Position update
         z_out(1:2,i+1) = z_out(1:2,i) + z_out(3:4,i+1)*dt;
     end
 
-
-    
     %% Compute Energy
     E = energy_leg(z_out,p);
     figure(1); clf
@@ -80,10 +66,8 @@ function simulate_leg()
     figure(2); clf;
     plot(tspan,rE(1,:),'r','LineWidth',2)
     hold on
-    %plot(tspan,p_traj.x_0 + p_traj.r * cos(p_traj.omega*tspan) ,'r--');
     plot(tspan,targets(1,:) ,'k--','LineWidth',3);
     plot(tspan,rE(2,:),'b','LineWidth',2)
-    %plot(tspan,p_traj.y_0 + p_traj.r * sin(p_traj.omega*tspan) ,'b--');
     plot(tspan, targets(2,:) ,'k--','LineWidth',3);
     
     
@@ -111,20 +95,11 @@ function simulate_leg()
     %% Animate Solution
     figure(6); clf;
     hold on
-   
-  
-%     % Target traj
-%     TH = 0:.1:2*pi;
-%     plot( p_traj.x_0 + p_traj.r * cos(TH), ...
-%           p_traj.y_0 + p_traj.r * sin(TH),'k--'); 
-     plot(rEd(1,1),rEd(2,1),'o');
-     plot(rEd(1,2),rEd(2,2),'o');
-%     % Ground Q2.3
-%     plot([-.2 .2],[ground_height ground_height],'k'); 
     
+    plot(rEd(1,1),rEd(2,1),'o');
+    plot(rEd(1,2),rEd(2,2),'o');
     animateSol(tspan, z_out,p);
 
-    
     momentum = zeros(1,length(tspan));
     for i = 1:length(tspan)
         z = z_out(:,i);
@@ -134,7 +109,7 @@ function simulate_leg()
         jointvels = [z(3) ; z(4)];
         cartvels = J*jointvels;
         velmag = sqrt(cartvels(1)^2 + cartvels(2)^2);
-        momentum(1,i) = abs(M_op(2,2) * cartvels(2));
+        momentum(1,i) = (M_op(1,1) * cartvels(1));
     end
 
     figure(7); 
@@ -145,8 +120,8 @@ function simulate_leg()
 
 end
 
-function tau = control_law(t, z, p, p_traj,targets)
-    % Controller gains, Update as necessary for Problem 1
+function tau = control_law(t, z, p,targets)
+    % Controller gains
     K_x = 100; % Spring stiffness X
     K_y = 100; % Spring stiffness Y
     D_x = 10;  % Damping X
@@ -179,25 +154,23 @@ function tau = control_law(t, z, p, p_traj,targets)
     vE = velocity_foot(z,p);
     
     % Compute virtual foce for Question 1.4 and 1.5
-     err_pos = rEd(1:2)- rE;
-     err_pos = [err_pos(1) ; err_pos(2)];
-     err_vel = vEd(1:2) - vE;
-     err_vel = [err_vel(1) ; err_vel(2)];
-     aEd = [aEd(1) ; aEd(2)];
+    err_pos = rEd(1:2)- rE;
+    err_pos = [err_pos(1) ; err_pos(2)];
+    err_vel = vEd(1:2) - vE;
+    err_vel = [err_vel(1) ; err_vel(2)];
+    aEd = [aEd(1) ; aEd(2)];
  
-%     f  = M_op * (aEd + K*err_pos + D*err_vel) + mu + rho;
-     f = M_op*(K*err_pos+D*err_vel);
-   
+    f = M_op*(K*err_pos+D*err_vel) + rho ;
     tau = J' * f;
 end
 
 
-function dz = dynamics(t,z,p,p_traj,targets)
+function dz = dynamics(t,z,p,targets)
     % Get mass matrix
     A = A_leg(z,p);
     
     % Compute Controls
-    tau = control_law(t,z,p,p_traj,targets);
+    tau = control_law(t,z,p,targets);
     
     % Get b = Q - V(q,qd) - G(q)
     b = b_leg(z,tau,p);
@@ -224,7 +197,7 @@ function animateSol(tspan, x,p)
     h_title = title('t=0.0s');
     
     axis equal
-    axis([-.2 .2 -.3 .1]);
+    axis([-.1 .3 -.2 .2]);
 
     %Step through and update animation
     for i = 1:length(tspan)
@@ -236,9 +209,9 @@ function animateSol(tspan, x,p)
         z = x(:,i); 
         keypoints = keypoints_leg(z,p);
 
-        rA = keypoints(:,1); % Vector to base of cart
+        rA = keypoints(:,1); 
         rB = keypoints(:,2);
-        rC = keypoints(:,3); % Vector to tip of pendulum
+        rC = keypoints(:,3);
         rD = keypoints(:,4);
         rE = keypoints(:,5);
 
