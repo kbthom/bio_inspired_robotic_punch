@@ -124,8 +124,12 @@ function simulate_arm()
 end
 
 function tau_limit=tau_constraint(tau,omega)
-    tau_omega_fit=[0.0001,-0.0186,0.9274];
-    tau_limit = min(polyval(tau_omega_fit,omega),tau);
+    %quadratic fit of torque speed curve
+    tau_omega_fit=[0.0001,-0.0186,0.9274]; 
+    %find max torque value at the speed and grab it if the commanded torque is higher
+    tau_limit = min(polyval(tau_omega_fit,abs(omega)),abs(tau)); 
+    %assign negative torque values where needed
+    tau_limit(tau<0)=-tau_limit(tau<0); 
 end
 function tau = control_law(t, z, p,targets)
     % Controller gains
@@ -177,8 +181,8 @@ function dz = dynamics(t,z,p,targets)
     A = A_arm(z,p);
     
     % Compute Controls
-    tau_control = control_law(t,z,p,targets);
-    tau=tau_constraint(tau_control,z(3:4));
+    tau_control = control_law(t,z,p,targets)
+    tau=tau_constraint(tau_control,z(3:4))
     
     % Get b = Q - V(q,qd) - G(q)
     b = b_arm(z,tau,p);
