@@ -125,9 +125,13 @@ end
 
 function tau_limit=tau_constraint(tau,omega)
     %quadratic fit of torque speed curve
-    tau_omega_fit=[0.0001,-0.0186,0.9274]; 
+    tau_omega_fit=[0.0001,-0.0186,0.9274];
+    %linear fit of torque and speed curve
+    tau_omega_fit_linear=[-0.0132,0.8537];
     %find max torque value at the speed and grab it if the commanded torque is higher
-    tau_limit = min(polyval(tau_omega_fit,abs(omega)),abs(tau)); 
+    max_tau_fit=max(polyval(tau_omega_fit,abs(omega)),zeros(size(tau)));
+    tau_limit = min(max_tau_fit,abs(tau));
+    tau_limit = max(tau_limit,zeros(size(tau_limit)));
     %assign negative torque values where needed
     tau_limit(tau<0)=-tau_limit(tau<0); 
 end
@@ -181,6 +185,7 @@ function dz = dynamics(t,z,p,targets)
     A = A_arm(z,p);
     
     % Compute Controls
+    z
     tau_control = control_law(t,z,p,targets)
     tau=tau_constraint(tau_control,z(3:4))
     
