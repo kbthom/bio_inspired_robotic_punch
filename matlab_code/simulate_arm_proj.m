@@ -185,7 +185,7 @@ function tau = control_law(t, z, p,targets)
 
     M_op = inv(J/A*J');
     mu = M_op*J/A * V - M_op*Jdot* [z(3);z(4)];
-    rho = M_op * J / inv(A) * G;
+    rho = M_op * J /A * G;
 
     K = [K_x , 0 ; 0 , K_y];
     D = [D_x , 0 ; 0 , D_y];
