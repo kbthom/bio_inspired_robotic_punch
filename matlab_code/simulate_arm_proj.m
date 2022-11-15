@@ -16,7 +16,7 @@ function simulate_arm()
     g = 9.81;    
     
     % Distribute Mass amongst the linkages
-    tot_m=1;
+    tot_m=2;
     mass_distribution= [0.25 , 0.25, 0.25, 0.25];
     m1 =mass_distribution(1)*tot_m;         m2 =mass_distribution(2)*tot_m; 
     m3 =mass_distribution(3)*tot_m;            m4 = mass_distribution(4)*tot_m;
