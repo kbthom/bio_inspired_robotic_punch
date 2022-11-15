@@ -14,7 +14,13 @@ function simulate_arm()
     N = 18.75;
     Ir = 0.0035/N^2;
     g = 9.81;    
-   
+    
+    % Distribute Mass amongst the linkages
+    tot_m=1;
+    mass_distribution= [0.25 , 0.25, 0.25, 0.25];
+    m1 =mass_distribution(1)*tot_m;         m2 =mass_distribution(2)*tot_m; 
+    m3 =mass_distribution(3)*tot_m;            m4 = mass_distribution(4)*tot_m;
+
     %% Parameter vector
     p   = [m1 m2 m3 m4 I1 I2 I3 I4 Ir N l_O_m1 l_B_m2 l_A_m3 l_C_m4 l_OA l_OB l_AC l_DE g]';
     
@@ -141,11 +147,11 @@ function simulate_arm()
     ylabel 'Momentum [kg*m/s]'
 
     figure(10)
-    plot(tspan,tau_out)
+    plot(tspan,tau_out,'LineWidth',2)
     xlabel('Time (s)')
     ylabel('Torque (N/m)')
     title('Torque over time')
-    legend(['Motor 1','Motor 2'])
+    legend('Motor 1','Motor 2')
 end
 
 function tau_limit=tau_constraint(tau,omega)
@@ -178,9 +184,8 @@ function tau = control_law(t, z, p,targets)
     Jdot = jacobian_dot_arm(z,p);
 
     M_op = inv(J/A*J');
-    mu = M_op * J * inv(A)* V - M_op * Jdot* [z(3) ; z(4)];
-%     mu = M_op*J/A * V - M_op*Jdot* [z(3);z(4)];
-    rho = M_op * J * inv(A) * G;
+    mu = M_op*J/A * V - M_op*Jdot* [z(3);z(4)];
+    rho = M_op * J / inv(A) * G;
 
     K = [K_x , 0 ; 0 , K_y];
     D = [D_x , 0 ; 0 , D_y];
