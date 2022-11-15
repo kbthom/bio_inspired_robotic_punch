@@ -26,9 +26,10 @@ function simulate_arm()
     z0 = [pi/2; -pi/2; 0; 0];
     z_out = zeros(4,num_step);
     z_out(:,1) = z0;
+    tau_out = zeros(2,num_step);
 
-    rEd = [0.1 , 0.22; 
-          0    , 0];
+    rEd = [0.1 , 0.2; 
+          0    , 0.0];
     targets = zeros(2,length(tspan));
     
     for i = 1:length(tspan);
@@ -42,8 +43,11 @@ function simulate_arm()
     end
     
     for i=1:num_step-1
-        dz = dynamics(tspan(i), z_out(:,i), p , rEd);
-
+        dz_tau=dynamics(tspan(i), z_out(:,i), p , rEd);
+        dz=dz_tau(1:4,:);
+        tau_motors=dz_tau(5:6,:);
+%         dz = dynamics(tspan(i), z_out(:,i), p , rEd);
+        tau_out(:,i+1)=tau_motors;
         % Velocity update with dynamics
         new = dz*dt;
         z_out(3:4,i+1) = z_out(3:4,i) + new(3:4);
@@ -58,7 +62,7 @@ function simulate_arm()
     figure(1); clf
     plot(tspan,E);xlabel('Time (s)'); ylabel('Energy (J)');
     
-    %% Compute foot position over time
+    %% Compute hand position over time
     rE = zeros(2,length(tspan));
     vE = zeros(2,length(tspan));
     for i = 1:length(tspan)
@@ -103,7 +107,8 @@ function simulate_arm()
     plot(rEd(1,2),rEd(2,2),'o');
     animateSol(tspan, z_out,p);
 
-    momentum = zeros(1,length(tspan));
+    %% Calculate Momentum
+    momentum = zeros(2,length(tspan));
     for i = 1:length(tspan)
         z = z_out(:,i);
         A = A_arm(z,p);
@@ -111,25 +116,49 @@ function simulate_arm()
         M_op =inv( (J/A)*J' );
         jointvels = [z(3) ; z(4)];
         cartvels = J*jointvels;
-        velmag = sqrt(cartvels(1)^2 + cartvels(2)^2);
-        momentum(1,i) = (M_op(1,1) * cartvels(1));
+%         velmag = sqrt(cartvels(1)^2 + cartvels(2)^2);
+        momentum(:,i) = M_op*cartvels;
     end
-
+    
+    tot_momentum = (momentum(1,:).^2 + momentum(2,:).^2).^0.5;
+    momentum_angle= atan2(momentum(2,:),momentum(1,:));
     figure(7); 
-    plot(tspan,momentum,'r','LineWidth',2)
-    title 'Momentum'
+    plot(tspan,momentum(1,:),'r','LineWidth',2)
+    title 'Momentum in X-direction'
     xlabel 'Time (s)'
     ylabel 'Momentum [kg*m/s]'
 
+    figure(8); 
+    plot(tspan,momentum(2,:),'b','LineWidth',2)
+    title 'Momentum in Y-direction'
+    xlabel 'Time (s)'
+    ylabel 'Momentum [kg*m/s]'
+
+    figure(9)
+    plot(tspan,tot_momentum(1,:),'r','LineWidth',2)
+    title 'Magnitude of Momentum'
+    xlabel 'Time (s)'
+    ylabel 'Momentum [kg*m/s]'
+
+    figure(10)
+    plot(tspan,tau_out)
+    xlabel('Time (s)')
+    ylabel('Torque (N/m)')
+    title('Torque over time')
+    legend(['Motor 1','Motor 2'])
 end
 
 function tau_limit=tau_constraint(tau,omega)
     %quadratic fit of torque speed curve
-    tau_omega_fit=[0.0001,-0.0186,0.9274];
+%     tau_omega_fit_quadratic=[0.0001,-0.0186,0.9274];
     %linear fit of torque and speed curve
     tau_omega_fit_linear=[-0.0132,0.8537];
+
+    %choose which fit
+    omega_fit=tau_omega_fit_linear;
+%     omega_fit=tau_omega_fit_quadratic
     %find max torque value at the speed and grab it if the commanded torque is higher
-    max_tau_fit=max(polyval(tau_omega_fit,abs(omega)),zeros(size(tau)));
+    max_tau_fit=max(polyval(omega_fit,abs(omega)),zeros(size(tau)));
     tau_limit = min(max_tau_fit,abs(tau));
     tau_limit = max(tau_limit,zeros(size(tau_limit)));
     %assign negative torque values where needed
@@ -150,6 +179,7 @@ function tau = control_law(t, z, p,targets)
 
     M_op = inv(J/A*J');
     mu = M_op * J * inv(A)* V - M_op * Jdot* [z(3) ; z(4)];
+%     mu = M_op*J/A * V - M_op*Jdot* [z(3);z(4)];
     rho = M_op * J * inv(A) * G;
 
     K = [K_x , 0 ; 0 , K_y];
@@ -174,20 +204,18 @@ function tau = control_law(t, z, p,targets)
     err_vel = vEd(1:2) - vE;
     err_vel = [err_vel(1) ; err_vel(2)];
     aEd = [aEd(1) ; aEd(2)];
- 
     f = M_op*(K*err_pos+D*err_vel) + rho ;
     tau = J' * f;
 end
 
 
-function dz = dynamics(t,z,p,targets)
+function dz_tau = dynamics(t,z,p,targets)
     % Get mass matrix
     A = A_arm(z,p);
     
     % Compute Controls
-    z
-    tau_control = control_law(t,z,p,targets)
-    tau=tau_constraint(tau_control,z(3:4))
+    tau_control = control_law(t,z,p,targets);
+    tau=tau_constraint(tau_control,z(3:4));
     
     % Get b = Q - V(q,qd) - G(q)
     b = b_arm(z,tau,p);
@@ -199,6 +227,7 @@ function dz = dynamics(t,z,p,targets)
     % Form dz
     dz(1:2) = z(3:4);
     dz(3:4) = qdd;
+    dz_tau=[dz;tau];
 end
 
 function animateSol(tspan, x,p)
