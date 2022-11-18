@@ -16,10 +16,10 @@ function simulate_arm()
     g = 9.81;    
     
     % Distribute Mass amongst the linkages
-    tot_m=2;
-    mass_distribution= [0.25 , 0.25, 0.25, 0.25];
-    m1 =mass_distribution(1)*tot_m;         m2 =mass_distribution(2)*tot_m; 
-    m3 =mass_distribution(3)*tot_m;            m4 = mass_distribution(4)*tot_m;
+%     tot_m=2;
+%     mass_distribution= [0.25 , 0.25, 0.25, 0.25];
+%     m1 =mass_distribution(1)*tot_m;         m2 =mass_distribution(2)*tot_m; 
+%     m3 =mass_distribution(3)*tot_m;            m4 = mass_distribution(4)*tot_m;
 
     %% Parameter vector
     p   = [m1 m2 m3 m4 I1 I2 I3 I4 Ir N l_O_m1 l_B_m2 l_A_m3 l_C_m4 l_OA l_OB l_AC l_DE g]';
@@ -152,6 +152,24 @@ function simulate_arm()
     ylabel('Torque (N/m)')
     title('Torque over time')
     legend('Motor 1','Motor 2')
+
+    figure(11)
+    xvals = rE(1,:);
+    xmom = momentum(1,:);
+
+    index = find(xvals >= rEd(1,2));
+    end_idx = index(1)
+    index2 = find(tspan>=2.0);
+    start_idx = index2(1)
+    
+    momentum_data = xmom(start_idx:end_idx);
+    xdata = xvals(start_idx:end_idx);
+    plot(xdata,momentum_data,'LineWidth',2)
+    xlabel('X position [m]')
+    ylabel('X Momentum [kg*m/s]')
+    title('X momentum vs X position')
+
+
 end
 
 function tau_limit=tau_constraint(tau,omega)
@@ -185,7 +203,7 @@ function tau = control_law(t, z, p,targets)
 
     M_op = inv(J/A*J');
     mu = M_op*J/A * V - M_op*Jdot* [z(3);z(4)];
-    rho = M_op * J /A * G;
+    rho = M_op * J/A * G;
 
     K = [K_x , 0 ; 0 , K_y];
     D = [D_x , 0 ; 0 , D_y];
