@@ -1,4 +1,23 @@
-function simulate_arm()
+%% PARAMETER SWEEP 
+tot_m = 0.5;
+ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
+peaks = [];
+m2_over_m4 = [];
+
+for i = 1:length(ratio_list)
+    m2_ratio = ratio_list(i);
+    m4_ratio = 1 - m2_ratio;
+    peak = simulate_arm(m2_ratio, m4_ratio,tot_m);
+    m2_over_m4(i) = m2_ratio/m4_ratio;
+    peaks(i) = peak;
+end
+
+plot(m2_over_m4,peaks,'k','LineWidth',2)
+title 'Parameter Sweep'
+xlabel 'M2 / M4'
+ylabel 'Peak X Momentum'
+
+function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
     addpath('auto_derived\')
     addpath('animate\')
     addpath('modeling\')
@@ -16,10 +35,8 @@ function simulate_arm()
     g = 9.81;    
     
     % Distribute Mass amongst the linkages
-%     tot_m=2;
-%     mass_distribution= [0.25 , 0.25, 0.25, 0.25];
-%     m1 =mass_distribution(1)*tot_m;         m2 =mass_distribution(2)*tot_m; 
-%     m3 =mass_distribution(3)*tot_m;            m4 = mass_distribution(4)*tot_m;
+    m2 =m2_ratio*tot_m; 
+    m4 = m4_ratio*tot_m;
 
     %% Parameter vector
     p   = [m1 m2 m3 m4 I1 I2 I3 I4 Ir N l_O_m1 l_B_m2 l_A_m3 l_C_m4 l_OA l_OB l_AC l_DE g]';
@@ -34,7 +51,7 @@ function simulate_arm()
     z_out(:,1) = z0;
     tau_out = zeros(2,num_step);
 
-    rEd = [0.1 , 0.2; 
+    rEd = [0.1 , 0.225; 
           0    , 0.0];
     targets = zeros(2,length(tspan));
     
@@ -133,6 +150,7 @@ function simulate_arm()
     title 'Momentum in X-direction'
     xlabel 'Time (s)'
     ylabel 'Momentum [kg*m/s]'
+    peak_mom = max(momentum(1,:));
 
     figure(8); 
     plot(tspan,momentum(2,:),'b','LineWidth',2)
@@ -158,7 +176,7 @@ function simulate_arm()
     xmom = momentum(1,:);
 
     index = find(xvals >= rEd(1,2));
-    end_idx = index(1)
+    end_idx = index(1);
     index2 = find(tspan>=2.0);
     start_idx = index2(1)
     
