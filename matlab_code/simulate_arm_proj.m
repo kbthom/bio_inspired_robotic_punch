@@ -33,11 +33,14 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
     N = 18.75;
     Ir = 0.0035/N^2;
     g = 9.81;    
-    
-    % Distribute Mass amongst the linkages
-    m2 =m2_ratio*tot_m; 
-    m4 = m4_ratio*tot_m;
+    r_masses=0.025;
 
+    % Distribute Mass amongst the linkages
+    m2 =m2+m2_ratio*tot_m; 
+    m4 = m4+m4_ratio*tot_m;
+
+    I2 = I2+0.5*m2_ratio*tot_m*r_masses^2;
+    I4 = I4+0.5*m4_ratio*tot_m*r_masses^2;
     %% Parameter vector
     p   = [m1 m2 m3 m4 I1 I2 I3 I4 Ir N l_O_m1 l_B_m2 l_A_m3 l_C_m4 l_OA l_OB l_AC l_DE g]';
     
