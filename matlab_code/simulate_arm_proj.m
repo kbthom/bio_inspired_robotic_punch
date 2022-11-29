@@ -1,11 +1,14 @@
 %% PARAMETER SWEEP 
-tot_m = 1;
-ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
+tot_m = 0.4;
+% ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
+ratio_step = 0.0125; %5 gram resolution
+ratio_list = [0:ratio_step:1];
 peaks = [];
 m2_over_m4 = [];
 xmasses = [];
 xvels = []; 
 
+animate=false;
 for i = 1:length(ratio_list)
     m2_ratio = ratio_list(i);
     m4_ratio = 1 - m2_ratio;
@@ -46,22 +49,25 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m)
     addpath('animate\')
     addpath('modeling\')
     %% Define fixed paramters
-    m1 =.0393 + .2;         m2 =.0368; 
-    m3 = .00783;            m4 = .0155;
-    I1 = 25.1 * 10^-6;      I2 = 53.5 * 10^-6;
-    I3 = 9.25 * 10^-6;      I4 = 22.176 * 10^-6;
+    m1 =0.0238;             m2 =.0304; 
+    m3 = .0037;             m4 = .0189;
+    I1 = 11584.75 * 10^-9;      I2 = 27498.98 * 10^-9;
+    I3 = 6668.66 * 10^-9;      I4 = 23804.22 * 10^-9;
     l_OA=.011;              l_OB=.042; 
     l_AC=.096;              l_DE=.091;
-    l_O_m1=0.032;           l_B_m2=0.0344; 
-    l_A_m3=0.0622;          l_C_m4=0.0610;
+    l_O_m1=0.02606;           l_B_m2=0.04415; 
+    l_A_m3=0.048;          l_C_m4=0.0283234;
     N = 18.75;
     Ir = 0.0035/N^2;
     g = 9.81;    
-    
-    % Distribute Mass amongst the linkages
-    m2 =m2_ratio*tot_m; 
-    m4 = m4_ratio*tot_m;
+    r_masses=0.025;
 
+    % Distribute Mass amongst the linkages
+    m2 =m2+m2_ratio*tot_m; 
+    m4 = m4+m4_ratio*tot_m;
+
+    I2 = I2+0.5*m2_ratio*tot_m*r_masses^2;
+    I4 = I4+0.5*m4_ratio*tot_m*r_masses^2;
     %% Parameter vector
     p   = [m1 m2 m3 m4 I1 I2 I3 I4 Ir N l_O_m1 l_B_m2 l_A_m3 l_C_m4 l_OA l_OB l_AC l_DE g]';
     
@@ -149,12 +155,14 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m)
     ylabel('Angular Velocity (deg/sec)');
     
     %% Animate Solution
-    figure(6); clf;
-    hold on
-    
-    plot(rEd(1,1),rEd(2,1),'o');
-    plot(rEd(1,2),rEd(2,2),'o');
-    %animateSol(tspan, z_out,p);
+    if animate
+        figure(6); clf;
+        hold on
+        
+        plot(rEd(1,1),rEd(2,1),'o');
+        plot(rEd(1,2),rEd(2,2),'o');
+        animateSol(tspan, z_out,p);
+    end
 
     %% Calculate Momentum
     momentum = zeros(2,length(tspan));
@@ -210,7 +218,7 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m)
     index = find(xvals >= rEd(1,2));
     end_idx = index(1);
     index2 = find(tspan>=2.0);
-    start_idx = index2(1)
+    start_idx = index2(1);
     
     momentum_data = xmom(start_idx:end_idx);
     xdata = xvals(start_idx:end_idx);
