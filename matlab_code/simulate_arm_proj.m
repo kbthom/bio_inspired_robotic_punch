@@ -22,8 +22,8 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
     addpath('animate\')
     addpath('modeling\')
     %% Define fixed paramters
-    m1 =.0393 + .2;         m2 =.0368; 
-    m3 = .00783;            m4 = .0155;
+    m1 =0.0238;             m2 =.0304; 
+    m3 = .0037;             m4 = .0189;
     I1 = 25.1 * 10^-6;      I2 = 53.5 * 10^-6;
     I3 = 9.25 * 10^-6;      I4 = 22.176 * 10^-6;
     l_OA=.011;              l_OB=.042; 
