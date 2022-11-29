@@ -6,10 +6,11 @@ ratio_list = [0:ratio_step:1];
 peaks = [];
 m2_over_m4 = [];
 
+animate=false;
 for i = 1:length(ratio_list)
     m2_ratio = ratio_list(i);
     m4_ratio = 1 - m2_ratio;
-    peak = simulate_arm(m2_ratio, m4_ratio,tot_m);
+    peak = simulate_arm(m2_ratio, m4_ratio,tot_m,animate);
     m2_over_m4(i) = m2_ratio/m4_ratio;
     peaks(i) = peak;
 end
@@ -19,7 +20,7 @@ title 'Parameter Sweep'
 xlabel 'M2 / M4'
 ylabel 'Peak X Momentum'
 
-function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m,an)
+function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m,animate)
     addpath('auto_derived\')
     addpath('animate\')
     addpath('modeling\')
@@ -128,12 +129,14 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m,an)
     ylabel('Angular Velocity (deg/sec)');
     
     %% Animate Solution
-    figure(6); clf;
-    hold on
-    
-    plot(rEd(1,1),rEd(2,1),'o');
-    plot(rEd(1,2),rEd(2,2),'o');
-    animateSol(tspan, z_out,p);
+    if animate
+        figure(6); clf;
+        hold on
+        
+        plot(rEd(1,1),rEd(2,1),'o');
+        plot(rEd(1,2),rEd(2,2),'o');
+        animateSol(tspan, z_out,p);
+    end
 
     %% Calculate Momentum
     momentum = zeros(2,length(tspan));
