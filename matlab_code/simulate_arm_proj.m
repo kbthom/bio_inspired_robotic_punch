@@ -1,23 +1,47 @@
 %% PARAMETER SWEEP 
-tot_m = 0.5;
+tot_m = 1;
 ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
 peaks = [];
 m2_over_m4 = [];
+xmasses = [];
+xvels = []; 
 
 for i = 1:length(ratio_list)
     m2_ratio = ratio_list(i);
     m4_ratio = 1 - m2_ratio;
-    peak = simulate_arm(m2_ratio, m4_ratio,tot_m);
+    output = simulate_arm(m2_ratio, m4_ratio,tot_m);
+    peak = output(1);
+    peak_idx = output(2);
+    xmass = output(3);
+    xvel = output(4);
+
     m2_over_m4(i) = m2_ratio/m4_ratio;
     peaks(i) = peak;
+    xmasses(i) = xmass;
+    xvels(i) = xvel;
 end
 
-plot(m2_over_m4,peaks,'k','LineWidth',2)
+figure
+plot(ratio_list,xmasses,'k','LineWidth',2)
+title 'X mass at peak momentum'
+xlabel 'Percent of Added Mass to M2'
+ylabel 'X mass at peak'
+
+figure
+plot(ratio_list,xvels,'k','LineWidth',2)
+title 'X Vel at peak momentum'
+xlabel 'Percent of Added Mass to M2'
+ylabel 'X Velocity at Peak'
+
+figure
+plot(ratio_list,peaks,'k','LineWidth',2)
 title 'Parameter Sweep'
-xlabel 'M2 / M4'
+xlabel 'Percent of Added Mass to M2'
 ylabel 'Peak X Momentum'
 
-function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
+
+
+function output = simulate_arm(m2_ratio, m4_ratio,tot_m)
     addpath('auto_derived\')
     addpath('animate\')
     addpath('modeling\')
@@ -108,7 +132,9 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
     hold on
     plot(tspan,vE(2,:),'b','LineWidth',2)
     
+    
     xlabel('Time (s)'); ylabel('Velocity (m)'); legend({'vel_x','vel_y'});
+
     
     figure(4)
     plot(tspan,z_out(1:2,:)*180/pi)
@@ -128,15 +154,17 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
     
     plot(rEd(1,1),rEd(2,1),'o');
     plot(rEd(1,2),rEd(2,2),'o');
-    animateSol(tspan, z_out,p);
+    %animateSol(tspan, z_out,p);
 
     %% Calculate Momentum
     momentum = zeros(2,length(tspan));
+    xmass_list = zeros(length(tspan));
     for i = 1:length(tspan)
         z = z_out(:,i);
         A = A_arm(z,p);
         J  = jacobian_arm(z,p); 
         M_op =inv( (J/A)*J' );
+        xmass_list(i) = M_op(1,1);
         jointvels = [z(3) ; z(4)];
         cartvels = J*jointvels;
 %         velmag = sqrt(cartvels(1)^2 + cartvels(2)^2);
@@ -151,6 +179,10 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
     xlabel 'Time (s)'
     ylabel 'Momentum [kg*m/s]'
     peak_mom = max(momentum(1,:));
+    peak_idx = find(momentum(1,:) == peak_mom);
+    xmass = xmass_list(peak_idx);
+    xvels = vE(1,:);
+    xvel = xvels(peak_idx);
 
     figure(8); 
     plot(tspan,momentum(2,:),'b','LineWidth',2)
@@ -187,7 +219,7 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
     ylabel('X Momentum [kg*m/s]')
     title('X momentum vs X position')
 
-
+    output=[peak_mom , peak_idx, xmass , xvel];
 end
 
 function tau_limit=tau_constraint(tau,omega)
