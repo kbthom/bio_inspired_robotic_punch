@@ -1,18 +1,19 @@
 %% PARAMETER SWEEP 
 tot_m = 0.4;
 % ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
-ratio_step = 0.0125; %5 gram resolution
+%ratio_step = 0.0125; %5 gram resolution
+ratio_step = 0.25;
 ratio_list = [0:ratio_step:1];
 peaks = [];
 m2_over_m4 = [];
 xmasses = [];
 xvels = []; 
 
-animate=false;
+animate=true;
 for i = 1:length(ratio_list)
     m2_ratio = ratio_list(i);
     m4_ratio = 1 - m2_ratio;
-    output = simulate_arm(m2_ratio, m4_ratio,tot_m);
+    output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate);
     peak = output(1);
     peak_idx = output(2);
     xmass = output(3);
@@ -44,7 +45,7 @@ ylabel 'Peak X Momentum'
 
 
 
-function output = simulate_arm(m2_ratio, m4_ratio,tot_m)
+function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate)
     addpath('auto_derived\')
     addpath('animate\')
     addpath('modeling\')
@@ -174,7 +175,8 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m)
         M_op =inv( (J/A)*J' );
         xmass_list(i) = M_op(1,1);
         jointvels = [z(3) ; z(4)];
-        cartvels = J*jointvels;
+        %cartvels = J*jointvels;
+        cartvels = vE(:,i);
 %         velmag = sqrt(cartvels(1)^2 + cartvels(2)^2);
         momentum(:,i) = M_op*cartvels;
     end
