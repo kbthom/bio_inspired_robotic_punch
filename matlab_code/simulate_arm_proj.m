@@ -31,8 +31,8 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m,animate)
     I3 = 6668.66 * 10^-9;      I4 = 23804.22 * 10^-9;
     l_OA=.011;              l_OB=.042; 
     l_AC=.096;              l_DE=.091;
-    l_O_m1=0.032;           l_B_m2=0.0344; 
-    l_A_m3=0.0622;          l_C_m4=0.0610;
+    l_O_m1=0.02606;           l_B_m2=0.04415; 
+    l_A_m3=0.048;          l_C_m4=0.0283234;
     N = 18.75;
     Ir = 0.0035/N^2;
     g = 9.81;    
