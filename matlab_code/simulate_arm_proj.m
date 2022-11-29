@@ -1,6 +1,8 @@
 %% PARAMETER SWEEP 
-tot_m = 0.5;
-ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
+tot_m = 0.4;
+% ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
+ratio_step = 0.0125; %5 gram resolution
+ratio_list = [0:ratio_step:1];
 peaks = [];
 m2_over_m4 = [];
 
@@ -17,7 +19,7 @@ title 'Parameter Sweep'
 xlabel 'M2 / M4'
 ylabel 'Peak X Momentum'
 
-function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
+function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m,an)
     addpath('auto_derived\')
     addpath('animate\')
     addpath('modeling\')
@@ -181,7 +183,7 @@ function peak_mom = simulate_arm(m2_ratio, m4_ratio,tot_m)
     index = find(xvals >= rEd(1,2));
     end_idx = index(1);
     index2 = find(tspan>=2.0);
-    start_idx = index2(1)
+    start_idx = index2(1);
     
     momentum_data = xmom(start_idx:end_idx);
     xdata = xvals(start_idx:end_idx);
