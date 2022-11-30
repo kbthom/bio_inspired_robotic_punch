@@ -1,15 +1,18 @@
 %% PARAMETER SWEEP 
 tot_m = 0.4;
 % ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
-%ratio_step = 0.0125; %5 gram resolution
-ratio_step = 0.25;
+ratio_step = 0.0125; %5 gram resolution
+ratio_step = 0.2;
 ratio_list = [0:ratio_step:1];
 peaks = [];
 m2_over_m4 = [];
 xmasses = [];
 xvels = []; 
+peakmasses = [];
+peakxvels = [];
 
-animate=true;
+
+animate=false;
 for i = 1:length(ratio_list)
     m2_ratio = ratio_list(i);
     m4_ratio = 1 - m2_ratio;
@@ -18,11 +21,15 @@ for i = 1:length(ratio_list)
     peak_idx = output(2);
     xmass = output(3);
     xvel = output(4);
+    peakmass = output(5);
+    peakxvel = output(6);
 
     m2_over_m4(i) = m2_ratio/m4_ratio;
     peaks(i) = peak;
     xmasses(i) = xmass;
     xvels(i) = xvel;
+    peakmasses(i) = peakmass;
+    peakxvels(i) = peakxvel;
 end
 
 figure
@@ -42,6 +49,48 @@ plot(ratio_list,peaks,'k','LineWidth',2)
 title 'Parameter Sweep'
 xlabel 'Percent of Added Mass to M2'
 ylabel 'Peak X Momentum'
+
+figure
+plot(ratio_list,peakmasses,'k','LineWidth',2)
+title 'Peak X mass'
+xlabel 'Percent of Added Mass to M2'
+ylabel 'Peak X Mass'
+
+figure
+plot(ratio_list,peakxvels,'k','LineWidth',2)
+title 'Peak X velo'
+xlabel 'Percent of Added Mass to M2'
+ylabel 'Peak X Velo'
+
+% figure
+% plot(m2_over_m4,xmasses,'k','LineWidth',2)
+% title 'X mass at peak momentum'
+% xlabel 'M2 / M4'
+% ylabel 'X mass at peak'
+% 
+% figure
+% plot(m2_over_m4,xvels,'k','LineWidth',2)
+% title 'X Vel at peak momentum'
+% xlabel 'M2 / M4'
+% ylabel 'X Velocity at Peak'
+% 
+% figure
+% plot(m2_over_m4,peaks,'k','LineWidth',2)
+% title 'Parameter Sweep'
+% xlabel 'M2 / M4'
+% ylabel 'Peak X Momentum'
+
+% figure
+% plot(m2_over_m4,peakmasses,'k','LineWidth',2)
+% title 'Peak X mass'
+% xlabel 'm2 /m4'
+% ylabel 'Peak X Mass'
+% 
+% figure
+% plot(m2_over_m4,peakxvels,'k','LineWidth',2)
+% title 'Peak X velo'
+% xlabel 'm2 / m4'
+% ylabel 'Peak X Velo'
 
 
 
@@ -130,8 +179,6 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate)
     plot(tspan,targets(1,:) ,'k--','LineWidth',3);
     plot(tspan,rE(2,:),'b','LineWidth',2)
     plot(tspan, targets(2,:) ,'k--','LineWidth',3);
-    
-    
     xlabel('Time (s)'); ylabel('Position (m)'); legend({'x','x_d','y','y_d'});
 
     figure(3); clf;
@@ -188,11 +235,6 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate)
     title 'Momentum in X-direction'
     xlabel 'Time (s)'
     ylabel 'Momentum [kg*m/s]'
-    peak_mom = max(momentum(1,:));
-    peak_idx = find(momentum(1,:) == peak_mom);
-    xmass = xmass_list(peak_idx);
-    xvels = vE(1,:);
-    xvel = xvels(peak_idx);
 
     figure(8); 
     plot(tspan,momentum(2,:),'b','LineWidth',2)
@@ -229,7 +271,15 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate)
     ylabel('X Momentum [kg*m/s]')
     title('X momentum vs X position')
 
-    output=[peak_mom , peak_idx, xmass , xvel];
+    peak_mom = max(momentum(1,:));
+    peak_idx = find(momentum(1,:) == peak_mom);
+    xmass = xmass_list(peak_idx);
+    xvels = vE(1,:);
+    xvel = xvels(peak_idx);
+    peakmass= max(xmass_list);
+    peakxvel = max(xvels);
+
+    output=[peak_mom , peak_idx, xmass , xvel, peakmass, peakxvel];
 end
 
 function tau_limit=tau_constraint(tau,omega)
