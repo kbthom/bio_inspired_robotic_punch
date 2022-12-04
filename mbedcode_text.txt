@@ -34,6 +34,7 @@ Matrix JacobianT(2,2);
 Matrix InverseMassMatrix(2,2);
 Matrix temp_product(2,2);
 Matrix Lambda(2,2);
+Matrix rho_matrix_without_G(2,2);
 
 // Variables for q1
 float current1;
@@ -74,6 +75,7 @@ const float l_A_m3=0.0622;
 const float l_C_m4=0.0610;
 const float N = 18.75;
 const float Ir = 0.0035/pow(N,2);
+const float g=9.81; // 9.81 m/s^2
 
 // Timing parameters
 float current_control_period_us = 200.0f;     // 5kHz current control loop
@@ -411,4 +413,3 @@ int main (void)
     } // end while
     
 } // end main
-
