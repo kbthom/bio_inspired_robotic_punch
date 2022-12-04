@@ -81,6 +81,7 @@ const float g=9.81; // 9.81 m/s^2
 float current_control_period_us = 200.0f;     // 5kHz current control loop
 float impedance_control_period_us = 1000.0f;  // 1kHz impedance control loop
 float start_period, traj_period, end_period;
+float let_go_time=2;
 
 // Control parameters
 float current_Kp = 4.0f;         
@@ -239,10 +240,11 @@ int main (void)
                 // Set gains based on buffer and traj times, then calculate desired x,y from Bezier trajectory at current time if necessary
                 float teff  = 0;
                 float vMult = 0;
+
                 if( t < start_period) {
                     if (K_xx > 0 || K_yy > 0) {
-                        K_xx = 100; 
-                        K_yy = 100; 
+                        K_xx = 200; 
+                        K_yy = 200; 
                         D_xx = 5;  
                         D_yy = 5;  
                         K_xy = 0;
@@ -346,10 +348,11 @@ int main (void)
                 //rho = lambda*jacobian*mass_inv*G
                 float rho_x = rng11*G1+rng12*G2;
                 float rho_y = rng21*G1+rng22*G2;
+
                     
                 // Calculate virtual force on foot
-                float fx = K_xx*e_x + K_xy*e_y + D_xx*de_x + D_xy*de_y + rho_x;
-                float fy = K_xy*e_x + K_yy*e_y + D_xy*de_x + D_yy*de_y + rho_y;
+                float fx = K_xx*e_x + K_xy*e_y + D_xx*de_x + D_xy*de_y;
+                float fy = K_xy*e_x + K_yy*e_y + D_xy*de_x + D_yy*de_y;
                 
                 
                 float JL11 = Jx_th1*L11 + Jy_th1*L21;
@@ -358,8 +361,8 @@ int main (void)
                 float JL22 = Jx_th2*L12 + Jy_th2*L22;
                               
                 
-                float t1 = JL11 * fx + JL12*fy;
-                float t2 = JL21 * fx + JL22*fy;
+                float t1 = JL11 * fx + JL12*fy+ Jx_th1*rho_x;;
+                float t2 = JL21 * fx + JL22*fy + Jx_th2*rho_y;
                       
                 
                 
