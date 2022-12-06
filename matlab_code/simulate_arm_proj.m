@@ -2,7 +2,7 @@
 tot_m = 0.5;
 % ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
 ratio_step = 0.0125; %5 gram resolution
-% ratio_step = 0.2;
+ratio_step = 0.025;
 ratio_list = [0:ratio_step:1];
 peaks = [];
 m2_over_m4 = [];
@@ -47,8 +47,8 @@ ylabel 'X Velocity at Peak'
 
 figure(22)
 plot(ratio_list,peaks,'k','LineWidth',2)
-title 'Parameter Sweep'
-xlabel 'Percent of Added Mass to M2'
+title 'Peak Momentum of Punch'
+xlabel 'Percent of Added Mass to Upper Arm'
 ylabel 'Peak X Momentum'
 
 figure(25)
@@ -138,8 +138,8 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate,trial_figures)
     z_out(:,1) = z0;
     tau_out = zeros(2,num_step);
 
-    rEd = [0.1 , 0.225; 
-          0    , 0.0];
+    rEd = [0.1 , 0.2; 
+          0    , 0];
     targets = zeros(2,length(tspan));
     
     for i = 1:length(tspan);
@@ -312,10 +312,15 @@ function tau_limit=tau_constraint(tau,omega)
 end
 function tau = control_law(t, z, p,targets)
     % Controller gains
-    K_x = 100; % Spring stiffness X
-    K_y = 100; % Spring stiffness Y
+%     K_x = 100; % Spring stiffness X
+%     K_y = 100; % Spring stiffness Y
+%     D_x = 10;  % Damping X
+%     D_y = 10;  % Damping Y
+
+    K_x = 200; % Spring stiffness X
+    K_y = 200; % Spring stiffness Y
     D_x = 10;  % Damping X
-    D_y = 10;  % Damping Y
+    D_y = 20;  % Damping Y
 
     A = A_arm(z,p);
     J  = jacobian_arm(z,p); 
@@ -332,11 +337,13 @@ function tau = control_law(t, z, p,targets)
 
     if t < 2.0
         rEd = targets(:,1);
+        vEd = [0;0];
     else
         rEd = targets(:,2);
+        vEd = [2;0];
     end
  
-     vEd = [0 0];
+    % vEd = [0 0];
      aEd = [0 0];
 
     % Actual position and velocity 
@@ -346,10 +353,16 @@ function tau = control_law(t, z, p,targets)
     % Compute virtual foce for Question 1.4 and 1.5
     err_pos = rEd(1:2)- rE;
     err_pos = [err_pos(1) ; err_pos(2)];
+
+    epsilon = 0.05 ;
+    if abs(err_pos) < epsilon
+        vEd = [0 ; 0];
+    end
+
     err_vel = vEd(1:2) - vE;
     err_vel = [err_vel(1) ; err_vel(2)];
     aEd = [aEd(1) ; aEd(2)];
-    f = M_op*(K*err_pos+D*err_vel) + rho ;
+    f = M_op*(K*err_pos+D*err_vel)+rho  ;
     tau = J' * f;
 end
 

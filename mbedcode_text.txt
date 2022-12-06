@@ -61,21 +61,24 @@ const float l_OA=.011;
 const float l_OB=.042; 
 const float l_AC=.096; 
 const float l_DE=.091;
-const float m1 =.0393 + .2;
-const float m2 =.0368; 
-const float m3 = .00783;
-const float m4 = .0155;
-const float I1 = 0.0000251;  //25.1 * 10^-6;
-const float I2 = 0.0000535;  //53.5 * 10^-6;
-const float I3 = 0.00000925; //9.25 * 10^-6;
-const float I4 = 0.0000222;  //22.176 * 10^-6;
-const float l_O_m1=0.032;
-const float l_B_m2=0.0344; 
-const float l_A_m3=0.0622;
-const float l_C_m4=0.0610;
+const float m1 =.0238;
+const float m2 =.0304; 
+const float m3 = .0037;
+const float m4 = .0189;
+const float rmasses = .025;
+const float I1 = 0.00001158475;  //25.1 * 10^-6;
+const float I2 = 0.00002749898 + 0;  
+const float I3 = 0.00000666866; //9.25 * 10^-6;
+const float I4 = 0.00002380422 ;//+.5*.16*pow(rmasses,2); 
+const float l_O_m1=0.0238;
+const float l_B_m2=0.04415; 
+const float l_A_m3=0.048;
+const float l_C_m4=0.0283;
 const float N = 18.75;
 const float Ir = 0.0035/pow(N,2);
 const float g=9.81; // 9.81 m/s^2
+
+
 
 // Timing parameters
 float current_control_period_us = 200.0f;     // 5kHz current control loop
@@ -243,10 +246,10 @@ int main (void)
 
                 if( t < start_period) {
                     if (K_xx > 0 || K_yy > 0) {
-                        K_xx = 200; 
-                        K_yy = 200; 
-                        D_xx = 5;  
-                        D_yy = 5;  
+                        K_xx = 500; 
+                        K_yy = 500; 
+                        D_xx = 10;  
+                        D_yy = 10;  
                         K_xy = 0;
                         D_xy = 0;
                     }
@@ -361,9 +364,11 @@ int main (void)
                 float JL22 = Jx_th2*L12 + Jy_th2*L22;
                               
                 
-                float t1 = JL11 * fx + JL12*fy+ Jx_th1*rho_x;;
-                float t2 = JL21 * fx + JL22*fy + Jx_th2*rho_y;
-                      
+                //float t1 = JL11 * fx + JL12*fy+ Jx_th1*rho_x;;
+                //float t2 = JL21 * fx + JL22*fy + Jx_th2*rho_y;
+                
+                float t1 = Jx_th1*(L11*fx+L12*fy+rho_x)+Jy_th1*(L21*fx+L22*fy+rho_y);
+                float t2 = Jx_th2*(L11*fx+L12*fy+rho_x)+Jy_th2*(L21*fx+L22*fy+rho_y);
                 
                 
                                 
