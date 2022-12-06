@@ -1,16 +1,22 @@
-all_data = []
-x_vals = []
+
+force_data = [];
+x_vals = [];
+mo_vals = [];
 for u = 0:6
 
-    [trial_data, num] = get_data(u,6-u);
+    [trial_data, num, time_i] = get_data(u,6-u);
+    counter = size(time_i,2);
+    dt_sum = sum(time_i);
     x_array = ones(1, num)*u;
-    all_data  = [all_data trial_data];
-    x_vals = [x_vals x_array]
+    force_data  = [force_data trial_data];
+    x_vals = [x_vals x_array];
+    avg_dt(u+1) = dt_sum/counter;
+    mo_vals = [mo_vals trial_data.*time_i];
 end
-all_data;
+avg_dt
+mo_vals
 
-
-function [max_force_array, num] = get_data(upper_val, lower_val)
+function [max_force_array, num, time_i] = get_data(upper_val, lower_val)
     upper_val = int2str(upper_val);
     lower_val = int2str(lower_val);
     folder_size=dir(['data/new/upper', upper_val, '_lower', lower_val, '/Good /*.csv']);
@@ -36,11 +42,12 @@ function [max_force_array, num] = get_data(upper_val, lower_val)
         %avg_offset = mean(force_data);
         max_force = max(force_data);
         max_force_array(y) = max_force;
+        time_i(y) = momentum_calc(force_data);
     end
     num = out;
     
     
-    function momentum = momentum_calc(force_data, avg_offset)
+    function time_interval = momentum_calc(force_data)
     
         time_counter = 0;
         [max_val, index] = max(force_data);
