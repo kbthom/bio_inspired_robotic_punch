@@ -5,33 +5,34 @@
 %% SET YOUR INPUTS HERE
 
 % Bezier curve control points
-const_point = [0; -0.15]; %[x;y] or [q1,q2] constant coordinate (x,q1,q2 coordinates should be opposite sign due to direction motors are mounted)
-%pts_foot = repmat(const_point,1,8);
+const_point = [.2; 0]; %[x;y] or [q1,q2] constant coordinate (x,q1,q2 coordinates should be opposite sign due to direction motors are mounted)
+pts_foot = repmat(const_point,1,8);
 
-pts_foot  =  [ -0.1659   -0.1659   -0.1659   -0.1682    0.0888    0.0923    0.0923    0.0923; -0.0179   -0.0179   -0.0179   -0.1265   -0.1861   -0.1277   -0.1277   -0.1277];  % YOUR BEZIER PTS HERE
+pts_foot = [    -0.0935   -0.0935   -0.0935   -0.0129    0.0759    0.1507    0.2313    0.2313    0.2313;
+   -0.1359   -0.1359   -0.1359   -0.1686   -0.1300   -0.0810   -0.0412   -0.0412   -0.0412]; % YOUR BEZIER PTS HERE
         
 % Initial leg angles for encoder resets (negative of q1,q2 in lab handout due to direction motors are mounted)
 angle1_init = 0;
 angle2_init = -pi/2; 
 
 % Total experiment time is buffer,trajectory,buffer
-traj_time         = 2;
+traj_time         = .2;
 pre_buffer_time   = 2; % this should be 0 for constant points, 2 for Bezier trajectories
 post_buffer_time  = 2;
 
 % Gains for impedance controller
 % If a gain is not being used in your Mbed code, set it to zero
 % For joint space control, use K_xx for K1, K_yy for K2, D_xx for D1, D_yy for D2
-gains.K_xx = 200;
-gains.K_yy = 200;
+gains.K_xx = 1000;
+gains.K_yy = 1000;
 gains.K_xy = 0;
 
-gains.D_xx = 15;
-gains.D_yy = 15;
-gains.D_xy = 5;
+gains.D_xx = 10;
+gains.D_yy = 10;
+gains.D_xy = 0;
 
 % Maximum duty cycle commanded by controller (should always be <=1.0)
-duty_max   = 0.9;
+duty_max   = 1;
 
 %% Run Experiment
 [output_data] = Experiment_trajectory( angle1_init, angle2_init, pts_foot,...
