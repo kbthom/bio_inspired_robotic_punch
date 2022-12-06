@@ -1,8 +1,8 @@
 %% PARAMETER SWEEP 
 tot_m = 0.5;
-% ratio_list = [.1 .2 .3 .4 .5 .6 .7 .8 .9];
+ratio_list = [.1 .3 .6 ];
 ratio_step = 0.0125; %5 gram resolution
-ratio_step = 0.025;
+%ratio_step = 0.4;
 ratio_list = [0:ratio_step:1];
 peaks = [];
 m2_over_m4 = [];
@@ -35,27 +35,27 @@ end
 
 figure(20)
 plot(ratio_list,xmasses,'k','LineWidth',2)
-title 'X mass at peak momentum'
+title 'X mass at plate'
 xlabel 'Percent of Added Mass to M2'
-ylabel 'X mass at peak'
+ylabel 'X mass'
 
 figure(21)
 plot(ratio_list,xvels,'k','LineWidth',2)
-title 'X Vel at peak momentum'
+title 'X Vel at plate'
 xlabel 'Percent of Added Mass to M2'
-ylabel 'X Velocity at Peak'
+ylabel 'X Velocity'
 
 figure(22)
 plot(ratio_list,peaks,'k','LineWidth',2)
-title 'Peak Momentum of Punch'
+title 'Momentum of Punch at plate'
 xlabel 'Percent of Added Mass to Upper Arm'
-ylabel 'Peak X Momentum'
+ylabel 'X Momentum'
 
 figure(25)
 plot(m2_over_m4,peaks,'k','LineWidth',2)
-title 'Parameter Sweep'
+title 'Momentum of Punch at plate'
 xlabel 'M2 / M4'
-ylabel 'Peak X Momentum'
+ylabel 'X Momentum'
 
 figure(23)
 plot(ratio_list,peakmasses,'k','LineWidth',2)
@@ -133,27 +133,49 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate,trial_figures)
     tf = 5;
     num_step = floor(tf/dt);
     tspan = linspace(0, tf, num_step); 
-    z0 = [pi/2; -pi/2; 0; 0];
+    z0 = [0; pi/2; 0; 0];
     z_out = zeros(4,num_step);
     z_out(:,1) = z0;
     tau_out = zeros(2,num_step);
 
-    rEd = [0.1 , 0.2; 
-          0    , 0];
+    pts_foot = [-0.0989  -0.0989  -0.0989  -0.0332  0.0573  0.1376  0.1931  0.1931  0.1931;
+        -0.1332  -0.1332  -0.1332  -0.1639  -0.1624  -0.0996  -0.0252  -0.0252  -0.02]; % YOUR BEZIER PTS HERE
+    t_traj = 0.2;
+    
+    num_steps = floor(t_traj/dt);
+    ctrl_t = linspace(0, t_traj, num_steps); 
+    n = length(ctrl_t);
+    rEd = zeros(2,n);
+
+    for i=1:n
+    rEd(:,i) = BezierCurve(pts_foot,ctrl_t(i)/t_traj);
+    end
+
     targets = zeros(2,length(tspan));
+    targetv  =zeros(2,length(tspan));
     
     for i = 1:length(tspan);
-        if tspan(i) < 2  
-            targets(1,i) = rEd(1,1);
+        if tspan(i) <= 2  
+            targets(1,i) = -rEd(1,1);
             targets(2,i) = rEd(2,1);
-        else
-            targets(1,i) = rEd(1,2);
-            targets(2,i) = rEd(2,2);
+            targetv(1,i) = 0;
+            targetv(2,i) = 0;
+        elseif 2 < tspan(i) && tspan(i) <= 2 + t_traj 
+            targets(1,i) = -rEd(1,i-2000);
+            targets(2,i) = rEd(2,i-2000);
+            targetv(1,i) = (targets(1,i) - targets(1,i-1))/dt;
+            targetv(2,i) = .1*(targets(2,i) - targets(2,i-1))/dt;
+
+        elseif tspan(i) > 2 + t_traj
+            targets(1,i) = -rEd(1,end);
+            targets(2,i) = rEd(2,end);
+            targetv(1,i) = 0;
+            targetv(2,i) = 0;
         end
     end
     
     for i=1:num_step-1
-        dz_tau=dynamics(tspan(i), z_out(:,i), p , rEd);
+        dz_tau=dynamics( tspan(i), z_out(:,i), p , targets, tspan, targetv);
         dz=dz_tau(1:4,:);
         tau_motors=dz_tau(5:6,:);
 %         dz = dynamics(tspan(i), z_out(:,i), p , rEd);
@@ -216,9 +238,7 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate,trial_figures)
     if animate
         figure(6); clf;
         hold on
-        
-        plot(rEd(1,1),rEd(2,1),'o');
-        plot(rEd(1,2),rEd(2,2),'o');
+        plot(targets(1,:),targets(2,:),"k--");
         animateSol(tspan, z_out,p);
     end
 
@@ -282,14 +302,18 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate,trial_figures)
         ylabel('X Momentum [kg*m/s]')
         title('X momentum vs X position')
     end
-
-    peak_mom = max(momentum(1,:));
-    peak_idx = find(momentum(1,:) == peak_mom);
+    rex = rE(1,:);
+    xplate = -.17;
+    plateindices = find(rex<=xplate);
+    plateidx = plateindices(1);
+    xmoment = momentum(1,:);
+    peak_mom = abs(xmoment(plateidx));
+    peak_idx = find(momentum(1,:) == -peak_mom);
     xmass = xmass_list(peak_idx);
     xvels = vE(1,:);
-    xvel = xvels(peak_idx);
+    xvel = -xvels(peak_idx);
     peakmass= max(xmass_list);
-    peakxvel = max(xvels);
+    peakxvel = -min(xvels);
 
     output=[peak_mom , peak_idx, xmass , xvel, peakmass, peakxvel];
 end
@@ -310,7 +334,7 @@ function tau_limit=tau_constraint(tau,omega)
     %assign negative torque values where needed
     tau_limit(tau<0)=-tau_limit(tau<0); 
 end
-function tau = control_law(t, z, p,targets)
+function tau = control_law(t, z, p,targets, allt, targetv)
     % Controller gains
 %     K_x = 100; % Spring stiffness X
 %     K_y = 100; % Spring stiffness Y
@@ -319,8 +343,8 @@ function tau = control_law(t, z, p,targets)
 
     K_x = 200; % Spring stiffness X
     K_y = 200; % Spring stiffness Y
-    D_x = 10;  % Damping X
-    D_y = 20;  % Damping Y
+    D_x = 50;  % Damping X
+    D_y = 50;  % Damping Y
 
     A = A_arm(z,p);
     J  = jacobian_arm(z,p); 
@@ -335,15 +359,19 @@ function tau = control_law(t, z, p,targets)
     K = [K_x , 0 ; 0 , K_y];
     D = [D_x , 0 ; 0 , D_y];
 
-    if t < 2.0
-        rEd = targets(:,1);
-        vEd = [0;0];
-    else
-        rEd = targets(:,2);
-        vEd = [2;0];
-    end
+    idx = find(allt == t);
+    rEd =  targets(:,idx);
+    vEd = targetv(:,idx);
+
+%     if t < 2.0
+%         rEd = targets(:,1);
+%         %vEd = [0 0];
+%     else
+%         rEd = targets(:,2); 
+%         %vEd = [.5 0];
+%     end
  
-    % vEd = [0 0];
+     %vEd = [0 0];
      aEd = [0 0];
 
     % Actual position and velocity 
@@ -354,25 +382,25 @@ function tau = control_law(t, z, p,targets)
     err_pos = rEd(1:2)- rE;
     err_pos = [err_pos(1) ; err_pos(2)];
 
-    epsilon = 0.05 ;
-    if abs(err_pos) < epsilon
-        vEd = [0 ; 0];
-    end
+%     epsilon = 0.05 ;
+%     if abs(err_pos) < epsilon
+%         vEd = [0 ; 0];
+%     end
 
     err_vel = vEd(1:2) - vE;
     err_vel = [err_vel(1) ; err_vel(2)];
     aEd = [aEd(1) ; aEd(2)];
-    f = M_op*(K*err_pos+D*err_vel)+rho  ;
+    f = M_op*(K*err_pos+D*err_vel)+ rho  ;
     tau = J' * f;
 end
 
 
-function dz_tau = dynamics(t,z,p,targets)
+function dz_tau = dynamics(t,z,p,targets,tspan , targetv)
     % Get mass matrix
     A = A_arm(z,p);
     
     % Compute Controls
-    tau_control = control_law(t,z,p,targets);
+    tau_control = control_law(t,z,p,targets,tspan, targetv);
     tau=tau_constraint(tau_control,z(3:4));
     
     % Get b = Q - V(q,qd) - G(q)
@@ -401,7 +429,7 @@ function animateSol(tspan, x,p)
     h_title = title('t=0.0s');
     
     axis equal
-    axis([-.1 .4 -.3 .1]);
+    axis([-.3 .4 -.3 .1]);
 
     %Step through and update animation
     for i = 1:length(tspan)
