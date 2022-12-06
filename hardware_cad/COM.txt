@@ -1,0 +1,43 @@
+M1:
+Center of mass: ( millimeters )
+	X = 26.06
+	Y = 0.00
+	Z = 6.03
+
+Moments of inertia: ( grams *  square millimeters )
+Taken at the center of mass and aligned with the output coordinate system.
+	Lzz = 11584.75
+
+
+M2:
+Center of mass: ( millimeters )
+	X = 44.15
+	Y = 0.00
+	Z = -0.62
+
+Moments of inertia: ( grams *  square millimeters )
+Taken at the center of mass and aligned with the output coordinate system.
+	Lzz = 27498.98
+
+
+M3:
+Center of mass: ( millimeters )
+	X = 48.00
+	Y = 0.00
+	Z = 3.00
+
+Moments of inertia: ( grams *  square millimeters )
+Taken at the center of mass and aligned with the output coordinate system.
+	Lzz = 6668.66
+
+
+M4:
+Center of mass: ( millimeters )
+	X = 28.31
+	Y = -0.87
+	Z = 0.13
+
+Moments of inertia: ( grams *  square millimeters )
+Taken at the center of mass and aligned with the output coordinate system.
+	Lzz = 23804.22
+
