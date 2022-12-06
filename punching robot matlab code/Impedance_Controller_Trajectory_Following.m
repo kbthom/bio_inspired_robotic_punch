@@ -8,8 +8,10 @@
 const_point = [.2; 0]; %[x;y] or [q1,q2] constant coordinate (x,q1,q2 coordinates should be opposite sign due to direction motors are mounted)
 pts_foot = repmat(const_point,1,8);
 
-pts_foot = [    -0.0935   -0.0935   -0.0935   -0.0129    0.0759    0.1507    0.2313    0.2313    0.2313;
-   -0.1359   -0.1359   -0.1359   -0.1686   -0.1300   -0.0810   -0.0412   -0.0412   -0.0412]; % YOUR BEZIER PTS HERE
+%%pts_foot = [    -0.0935   -0.0935   -0.0935   -0.0129    0.0759    0.1507    0.2313    0.2313    0.2313;
+  %% -0.1359   -0.1359   -0.1359   -0.1686   -0.1300   -0.0810   -0.0412   -0.0412   -0.0412]; % YOUR BEZIER PTS HERE
+
+  pts_foot = [-0.0989  -0.0989  -0.0989  -0.0332  0.0573  0.1376  0.1931  0.1931  0.1931;  -0.1332  -0.1332  -0.1332  -0.1639  -0.1624  -0.0996  -0.0252  -0.0252  -0.02]; % YOUR BEZIER PTS HERE
         
 % Initial leg angles for encoder resets (negative of q1,q2 in lab handout due to direction motors are mounted)
 angle1_init = 0;
