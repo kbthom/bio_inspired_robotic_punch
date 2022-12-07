@@ -12,7 +12,7 @@ peakmasses = [];
 peakxvels = [];
 
 
-animate=false;
+animate=true;
 trial_figures=false;
 for i = 1:length(ratio_list)
     m2_ratio = ratio_list(i);
@@ -432,11 +432,11 @@ end
 function animateSol(tspan, x,p)
     % Prepare plot handles
     hold on
-    h_OB = plot([0],[0],'LineWidth',2);
-    h_AC = plot([0],[0],'LineWidth',2);
-    h_BD = plot([0],[0],'LineWidth',2);
-    h_CE = plot([0],[0],'LineWidth',2);
-    h_ellipse = plot(zeros(100),zeros(100),'LineWidth',2);
+    h_OB = plot([0],[0],'LineWidth',8,"Color",[0.39 0.83 0.07]);
+    h_AC = plot([0],[0],'LineWidth',2,"Color",[0.39 0.83 0.07]);
+    h_BD = plot([0],[0],'LineWidth',4.5,"Color",[0.39 0.83 0.07]);
+    h_CE = plot([0],[0],'LineWidth',4.5,"Color",[0.39 0.83 0.07]);
+    h_ellipse = plot(zeros(100),zeros(100),'LineWidth',2, 'Color', [.3 .75 .93]);
     
     xlabel('x'); ylabel('y');
     h_title = title('t=0.0s');
