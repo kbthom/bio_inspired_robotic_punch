@@ -1,5 +1,5 @@
 %% PARAMETER SWEEP 
-tot_m = 0.5;
+tot_m = 0.2;
 ratio_list = [.1 .3 .6 ];
 ratio_step = 0.0125; %5 gram resolution
 %ratio_step = 0.4;
@@ -303,12 +303,24 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate,trial_figures)
         title('X momentum vs X position')
     end
     rex = rE(1,:);
-    xplate = -.17;
+    xplate = -.16;
     plateindices = find(rex<=xplate);
+    
+    %%region after hitting plate
+    plate_region=round(0.2/dt);
+    plate_region_indices=plateindices(1:plate_region);
+    
     plateidx = plateindices(1);
     xmoment = momentum(1,:);
     peak_mom = abs(xmoment(plateidx));
+    [peak_mom,I]=max(abs(xmoment(plate_region_indices)));
+    
     peak_idx = find(momentum(1,:) == -peak_mom);
+
+    %%calculates total momemntum magnitude (x and y) uncomment if you want
+    %%to use this
+%     peak_mom=sqrt(momentum(1,plate_region_indices(I))^2+momentum(2,plate_region_indices(I))^2);
+
     xmass = xmass_list(peak_idx);
     xvels = vE(1,:);
     xvel = -xvels(peak_idx);
