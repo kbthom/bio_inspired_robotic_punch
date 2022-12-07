@@ -1,7 +1,7 @@
 %% PARAMETER SWEEP 
-tot_m = 0.2;
+tot_m = 0.12;
 ratio_list = [.1 .3 .6 ];
-ratio_step = 0.0125; %5 gram resolution
+ratio_step = 0.02/0.12; %5 gram resolution
 %ratio_step = 0.4;
 ratio_list = [0:ratio_step:1];
 peaks = [];
@@ -25,7 +25,7 @@ for i = 1:length(ratio_list)
     peakmass = output(5);
     peakxvel = output(6);
 
-    m2_over_m4(i) = m2_ratio/m4_ratio;
+    m2_over_m4(i) = (m2_ratio*tot_m+.0304)/(m4_ratio*tot_m+.0189);
     peaks(i) = peak;
     xmasses(i) = xmass;
     xvels(i) = xvel;
@@ -55,7 +55,8 @@ figure(25)
 plot(m2_over_m4,peaks,'k','LineWidth',2)
 title 'Momentum of Punch at plate'
 xlabel 'M2 / M4'
-ylabel 'X Momentum'
+ylabel 'X Momentum [kg*m/s]'
+
 
 figure(23)
 plot(ratio_list,peakmasses,'k','LineWidth',2)
@@ -164,7 +165,7 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate,trial_figures)
             targets(1,i) = -rEd(1,i-2000);
             targets(2,i) = rEd(2,i-2000);
             targetv(1,i) = (targets(1,i) - targets(1,i-1))/dt;
-            targetv(2,i) = .1*(targets(2,i) - targets(2,i-1))/dt;
+            targetv(2,i) = 0*(targets(2,i) - targets(2,i-1))/dt;
 
         elseif tspan(i) > 2 + t_traj
             targets(1,i) = -rEd(1,end);
@@ -303,7 +304,7 @@ function output = simulate_arm(m2_ratio, m4_ratio,tot_m,animate,trial_figures)
         title('X momentum vs X position')
     end
     rex = rE(1,:);
-    xplate = -.16;
+    xplate = -.14;
     plateindices = find(rex<=xplate);
     
     %%region after hitting plate
@@ -353,10 +354,10 @@ function tau = control_law(t, z, p,targets, allt, targetv)
 %     D_x = 10;  % Damping X
 %     D_y = 10;  % Damping Y
 
-    K_x = 200; % Spring stiffness X
-    K_y = 200; % Spring stiffness Y
-    D_x = 50;  % Damping X
-    D_y = 50;  % Damping Y
+    K_x = 1000; % Spring stiffness X
+    K_y = 500; % Spring stiffness Y
+    D_x = 30;  % Damping X
+    D_y = 100;  % Damping Y
 
     A = A_arm(z,p);
     J  = jacobian_arm(z,p); 
